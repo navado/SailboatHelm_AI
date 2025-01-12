@@ -31,9 +31,9 @@ bool IMUFilterAndCalibration::begin(int sdaPin, int sclPin, int intPin)
         Serial.println("[IMU] MPU9250 init failed!");
         return false;
     }
-    _mpu.setAccelRange(MPU9250::ACCEL_RANGE_2G);
-    _mpu.setGyroRange(MPU9250::GYRO_RANGE_250DPS);
-    _mpu.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_20HZ);
+    _mpu.setAccelRange(MPU9250AccelRange::ACCEL_RANGE_2G);
+    _mpu.setGyroRange(MPU9250GyroRange::GYRO_RANGE_250DPS);
+    _mpu.setDlpfBandwidth(DLPF_BANDWIDTH_20HZ);
     _mpu.setSrd(4); // ~200Hz
 
     pinMode(_intPin, INPUT_PULLUP);
