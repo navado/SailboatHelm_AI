@@ -16,8 +16,13 @@ You can create PRs, test, improve, discuss. I will appreciate all the feedback
 ## Roadmap
 
  - [X] Create basic code and compile
- - [ ] Add unit tests that run with `pio test`
+ - [ ] Add unit tests that run with `pio test`. Make tests run
  - [ ] Define electronic connections and protocols
  - [ ] Make the initial theoretically working version of the code
- - [ ] Build and test working prototype
+ - [X] Basic UI with tests
+ - [ ] Select proper screen and its connections, preferably 4 inch screen with buttons module, update pins and connections
+ - [ ] Assemble and test UI
+ - [ ] RX data from NMEA0183 over wifi
+ - [ ] TX commands using NMEA0183 over wifi (define $P protocol)
+ - [ ] Add command only mode without the stering mechanics and vise versa, use external course computer
  - [ ] TBD
