@@ -42,7 +42,8 @@ void test_no_new_data_no_update() {
 void test_integration_simple() {
     // Provide some gyro data
     mockImu.newData=true;
-    mockImu.data = {0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f,0.f,0.f};
+    mockImu.data = new IMUData();
+    mockImu.data->gx = 0.1f;
     mockTime.currentMs=2000;
     filterCal.update();
     // do it again with small dt

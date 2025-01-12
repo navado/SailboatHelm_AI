@@ -26,16 +26,24 @@ public:
     AutoSteeringMode lastMode = AutoSteeringMode::OFF;
     float lastParam = 0.0f;
 
-    void setMode(AutoSteeringMode mode, float param=0.0f) override {
+    void setMode(AutoSteeringMode mode, float param=0.0f)  {
         modeSet = true;
         lastMode = mode;
         lastParam= param;
     }
 };
 
+class MockInputDevice : public IInputDevice {
+public:
+    bool isPressed(ButtonId id) const override {
+        return false;
+    }
+};
+
 static UIModel model;
 static FakeAutoSteeringController fakeAuto;
-static UIController controller(model, fakeAuto);
+static MockInputDevice input;
+static UIController controller(model, fakeAuto, input);
 
 void setUp() {
     // Overwrite digitalRead with custom function

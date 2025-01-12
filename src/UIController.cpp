@@ -14,6 +14,10 @@ void UIController::update() {
     readButtons();
 }
 
+void UIController::begin() {
+    // Initialize any necessary state
+}
+
 void UIController::readButtons() {
     bool autoBtn = _input.isPressed(ButtonId::BTN_AUTO);
     bool modeBtn = _input.isPressed(ButtonId::BTN_MODE);

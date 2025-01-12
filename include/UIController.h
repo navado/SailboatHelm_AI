@@ -20,6 +20,7 @@ public:
 
     // Called periodically
     void update();
+    void begin();
 
 private:
     void readButtons();
