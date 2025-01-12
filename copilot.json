@@ -1,0 +1,45 @@
+{
+    "projectOverview": "This project is an automatic helm controller for sailboat based on ESP32. It uses data from builtin IMU and implements rudder servo control loop.",
+    "environment": {
+      "platform": "ESP32",
+      "framework": "Arduino (using PlatformIO IDE)"
+    },
+    "codeStyle": {
+      "indentation": "4 spaces",
+      "namingConvention": {
+        "variables": "snake_case",
+        "functions": "camelCase",
+        "classes": "PascalCase"
+      },
+      "styleGuide": "Follows Arduino style guidelines where applicable.",
+      "lintingTools": ["C++ Linter available in PlatformIO"]
+    },
+    "components": {
+      "SensorInterface": "Handles interaction with various sensors connected to the ESP32.",
+      "WiFiManager": "Manages all WiFi connectivity operations.",
+      "DataTransmitter": "Handles transmission of data over MQTT."
+    },
+    "libraries": [
+      "WiFiManager for managing WiFi connections and configuration portal",
+      "Wire.h for I2C communication",
+      "PubSubClient for MQTT messaging",
+        "ArduinoJson for JSON parsing",
+        "Adafruit BNO055 for interfacing with the BNO055 IMU",
+        "NMEA0183 for parsing NMEA messages",
+        "AsyncUDP to receive network commands over wifi"
+    ],
+    "patterns": ["Event-driven programming using Arduino framework functions like setup() and loop()"],
+    "configuration": {
+      "platformio_ini": "Defines platform versions, library dependencies, and build flags.",
+      "boardConfig": "Configured for ESP32 Dev Module."
+    },
+    "testing": {
+      "frameworks": ["Unity for unit testing"],
+      "approach": "Automatic testing of application logic, moking hardware interactions in the code. Abstract interfaces used for interfacing hardware features for testability and support of different hardware components."
+    },
+    "bestPractices": {
+      "errorHandling": "Use status codes returning wherever applicable. Boolean results for less complicated cases. If possible use dedicated return values for error handling.",
+      "memoryManagement": "Minimize dynamic memory allocation due to ESP32 constraints."
+    }
+  }
+  
