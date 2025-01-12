@@ -1,89 +1,99 @@
 #pragma once
-#include <cstddef>  // for size_t
-#include <cstring>
+#include <cstddef> // for size_t
 
 /**
- * A simple ring buffer for items of type T with capacity N.
- * This is a header-only template, so there's no .cpp needed.
+ * A circular ring buffer for items of type T with capacity N.
  * 
- * Usage example:
+ * Key behavior: 
+ *   - If the buffer is **full** and you push a new item, 
+ *     the **oldest** item is overwritten.
+ *   - pop() retrieves the **oldest** item from the buffer 
+ *     (FIFO ordering).
  * 
- *   RingBuffer<IMUData, 16> myIMURing;
- *   myIMURing.push(someIMUData);
+ * Typical usage:
+ *   RingBuffer<IMUData, 16> ring;
+ *   ring.push(someData);  // If full, it overwrites the oldest
  *   ...
  *   IMUData out;
- *   if(myIMURing.pop(out)) { ... }
+ *   if(ring.pop(out)) { 
+ *       // popped from the oldest
+ *   }
  */
 template<typename T, size_t N>
 class RingBuffer {
 public:
-    RingBuffer() 
-    : _head(0)
-    , _tail(0)
-    , _count(0)
+    RingBuffer()
+        : _head(0)
+        , _tail(0)
+        , _count(0)
     {
-        // optionally zero out the buffer
-        // std::memset(_buffer, 0, sizeof(_buffer));
+        // Optionally zero out the buffer
+        // for (size_t i=0; i < N; i++) {
+        //     _buffer[i] = T{};
+        // }
     }
 
+    ~RingBuffer() = default;
+
     /**
-     * Returns true if the buffer is full (cannot accept more).
+     * Return the capacity (constant N).
      */
-    bool isFull() const {
-        return (_count == N);
-    }
+    constexpr size_t capacity() const { return N; }
 
     /**
-     * Returns true if the buffer is empty (no items to pop).
+     * Return how many items are currently in the buffer.
      */
-    bool isEmpty() const {
-        return (_count == 0);
-    }
+    size_t size() const { return _count; }
 
     /**
-     * Push item into ring buffer if there's space.
-     * Returns true if pushed, false if full.
+     * Return true if the buffer has no items.
+     */
+    bool isEmpty() const { return (_count == 0); }
+
+    /**
+     * Return true if the buffer is at capacity (pushing a new item 
+     * will overwrite the oldest).
+     */
+    bool isFull() const { return (_count == N); }
+
+    /**
+     * Push item into the ring buffer, 
+     * overwriting the oldest if it's already full.
+     *
+     * This always returns true now, because we never reject an item.
      */
     bool push(const T& item) {
-        if(isFull()) {
-            return false; // buffer is full
-        }
         _buffer[_head] = item;
+
+        // If the buffer is already full, 
+        // move tail to discard the oldest item.
+        if(isFull()) {
+            _tail = (_tail + 1) % N;
+        } else {
+            _count++;
+        }
+        // Move head forward
         _head = (_head + 1) % N;
-        _count++;
-        return true;
+        return true; // always succeed
     }
 
     /**
-     * Pop an item if available. Return true if popped, false if empty.
+     * Pop the oldest item if available. 
+     * Return true if successful, false if empty.
      */
-    bool pop(T& outItem) {
+    bool pop(T& out) {
         if(isEmpty()) {
             return false;
         }
-        outItem = _buffer[_tail];
+        out = _buffer[_tail];
         _tail = (_tail + 1) % N;
         _count--;
         return true;
     }
 
-    /**
-     * Return the number of items currently stored.
-     */
-    size_t size() const {
-        return _count;
-    }
-
-    /**
-     * Return the capacity (i.e., N).
-     */
-    size_t capacity() const {
-        return N;
-    }
-
 private:
-    T      _buffer[N];
-    size_t _head;
-    size_t _tail;
-    size_t _count;
+    T      _buffer[N]; 
+    size_t _head;   // next position to write
+    size_t _tail;   // next position to read
+    size_t _count;  // how many items in buffer
 };
