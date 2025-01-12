@@ -2,7 +2,7 @@
 #include <string>
 
 /** Simple autopilot modes. */
-enum class AutoSteeringMode {
+enum  AutoSteeringMode {
     OFF,
     TRACK_HEADING,
     TRACK_COURSE,

@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "MyIMUProvider.h"
 #include <Wire.h>
 
@@ -31,11 +32,15 @@ bool MyIMUProvider::getIMUData(IMUData& outData) {
     // ring pop
     return _ring.pop(outData);
 }
-
+#ifdef ESP32
 void IRAM_ATTR MyIMUProvider::onImuDataReady() {
-    if(!instance) return;
     instance->readSensorInISR();
 }
+#else
+void MyIMUProvider::onImuDataReady() {
+    instance->readSensorInISR();
+}
+#endif
 
 void MyIMUProvider::readSensorInISR() {
     // Real code: read sensor registers quickly, or set a flag

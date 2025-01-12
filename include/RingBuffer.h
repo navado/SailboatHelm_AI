@@ -26,8 +26,6 @@ public:
         // std::memset(_buffer, 0, sizeof(_buffer));
     }
 
-    ~RingBuffer() = default;
-
     /**
      * Returns true if the buffer is full (cannot accept more).
      */

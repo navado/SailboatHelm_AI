@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Arduino.h>  // only needed if we want attachInterrupt, digitalPinToInterrupt, etc.
 #include "IIMUProvider.h"
 #include "RingBuffer.h" // our new ring buffer
 
@@ -11,14 +10,13 @@
 class MyIMUProvider : public IIMUProvider {
 public:
     MyIMUProvider();
-    ~MyIMUProvider() override;
+    ~MyIMUProvider();
 
     bool begin();
 
     // from IIMUProvider
-    bool getIMUData(IMUData& outData) override;
-
-    static void IRAM_ATTR onImuDataReady();
+    bool getIMUData(IMUData& outData);
+    static void onImuDataReady();
 
     void readSensorInISR();
 private:
