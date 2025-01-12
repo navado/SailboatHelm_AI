@@ -33,9 +33,9 @@ public:
 
 // Global Instances
 static AutoSteeringController autoSteer;
+static MyIMUProvider myIMU(0x69, 8); // example address/pin
 static MyTimeProvider timeProv;
-static MyIMUProvider  imuProv;  // extracted to separate file
-static IMUFilterAndCalibration imuFilter(imuProv, timeProv);
+static IMUFilterAndCalibration imuFilter(myIMU, timeProv);
 
 static UIModel uiModel;
 static UIView  uiView;
@@ -57,7 +57,7 @@ void setup() {
     pinMode(PIN_BTN_AUTO, INPUT_PULLUP);
 
     // Start IMU
-    imuProv.begin(); // references Wire, attachInterrupt, etc.
+    myIMU.begin(); // references Wire, attachInterrupt, etc.
 
     // Start UI
     uiView.begin();

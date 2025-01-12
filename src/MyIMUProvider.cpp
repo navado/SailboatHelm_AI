@@ -1,49 +1,72 @@
-#include <Arduino.h>
 #include "MyIMUProvider.h"
 #include <Wire.h>
 
-static const int PIN_IMU_DATA_READY = 8;
+// Static array from pin -> MyIMUProvider pointer
+MyIMUProvider* MyIMUProvider::s_pinMap[40] = {nullptr};
 
-MyIMUProvider* MyIMUProvider::instance = nullptr;
-
-MyIMUProvider::MyIMUProvider()
-: _dummyVal(0.f)
+MyIMUProvider::MyIMUProvider(uint8_t i2cAddr, int dataReadyPin)
+: _i2cAddr(i2cAddr)
+, _drPin(dataReadyPin)
+, _dummyVal(0.f)
 {
-    // ring buffer default constructed
+    // The ring buffer is default constructed
 }
 
 MyIMUProvider::~MyIMUProvider() {
-    if(instance == this) {
-        instance = nullptr;
+    // If we want to detach the interrupt, do so
+    // Also clear s_pinMap entry
+    if(_drPin >= 0 && _drPin < 40) {
+        s_pinMap[_drPin] = nullptr;
     }
 }
 
 bool MyIMUProvider::begin() {
+    // Start I2C
     Wire.begin();
-    pinMode(PIN_IMU_DATA_READY, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(PIN_IMU_DATA_READY),
-                    onImuDataReady,
-                    RISING);
-    instance = this;
+    // Possibly configure the IMU at _i2cAddr, e.g. check who_am_i, etc.
+
+    // Setup data-ready pin
+    if(_drPin < 0 || _drPin >= 40) {
+        return false; // invalid pin
+    }
+    pinMode(_drPin, INPUT_PULLUP);
+    s_pinMap[_drPin] = this; // register ourselves in the static map
+
+    attachInterrupt(digitalPinToInterrupt(_drPin), onImuInterrupt, RISING);
+
     return true;
 }
 
 bool MyIMUProvider::getIMUData(IMUData& outData) {
-    // ring pop
+    // pop from the ring
     return _ring.pop(outData);
 }
-#ifdef ESP32
-void IRAM_ATTR MyIMUProvider::onImuDataReady() {
-    instance->readSensorInISR();
+
+// The static ISR callback for any pin. We can't see 'pin' directly, 
+// but we know which pin triggered by the original attachInterrupt() call.
+void IRAM_ATTR MyIMUProvider::onImuInterrupt() {
+    // For Arduino, we can't get the pin number from within the interrupt. 
+    // We simply read the status register or assume it's this pin => 
+    // But we only have a single function... 
+    // This is a known limitation: we can't easily detect which pin triggered 
+    // if multiple pins share the same function. 
+    // One approach is to rely on the fact that only one pin triggers at a time 
+    // or do digitalRead, etc. If you want multiple pins, you'd do multiple attachInterrupt calls 
+    // each referencing a different static function. 
+    //
+    // For demonstration, let's do a naive approach that tries all known pins:
+    for(int p=0; p<40; p++){
+        if(s_pinMap[p]) {
+            // check if that pin is actually LOW => means triggered?
+            if(digitalRead(p)==LOW){
+                s_pinMap[p]->readSensorInISR();
+            }
+        }
+    }
 }
-#else
-void MyIMUProvider::onImuDataReady() {
-    instance->readSensorInISR();
-}
-#endif
 
 void MyIMUProvider::readSensorInISR() {
-    // Real code: read sensor registers quickly, or set a flag
+    // In real code: read from sensor registers quickly
     IMUData reading;
     reading.ax = 0.f;
     reading.ay = 0.f;
@@ -55,9 +78,8 @@ void MyIMUProvider::readSensorInISR() {
     reading.my = 0.f;
     reading.mz = 0.f;
 
-    _dummyVal += 0.1f; // example
+    _dummyVal += 0.1f;
 
     // push to ring
-    // if the ring is full, push() returns false => we skip
     _ring.push(reading);
 }
