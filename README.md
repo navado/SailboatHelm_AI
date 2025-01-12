@@ -16,6 +16,7 @@ You can create PRs, test, improve, discuss. I will appreciate all the feedback
 ## Roadmap
 
  - [X] Create basic code and compile
+ - [ ] Add unit tests that run with `pio test`
  - [ ] Define electronic connections and protocols
  - [ ] Make the initial theoretically working version of the code
  - [ ] Build and test working prototype
