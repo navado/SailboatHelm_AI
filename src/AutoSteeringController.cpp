@@ -1,119 +1,80 @@
 #include "AutoSteeringController.h"
+#include <cmath>
 
 AutoSteeringController::AutoSteeringController()
- : _mode(AutoSteeringMode::OFF),
-   _desiredHeading(0.0f),
-   _desiredCourse(0.0f),
-   _desiredWindAngle(0.0f),
-   _lockAngle(0.0f),
-   _desiredRudderAngle(0.0f),
-   _kP(1.0f), _kI(0.0f), _kD(0.0f),
-   _integral(0.0f), _lastErr(0.0f),
-   _lastTime(0)
+: _mode(AutoSteeringMode::OFF)
+, _desiredHeading(0.f)
+, _desiredCourse(0.f)
+, _desiredWindAngle(0.f)
+, _rudderAngle(0.f)
+, _kP(1.f)
+, _kI(0.f)
+, _kD(0.f)
+, _integral(0.f)
+, _lastError(0.f)
 {
-    _env.heading=0.0f;
-    _env.course=0.0f;
-    _env.windDirection=0.0f;
 }
 
-void AutoSteeringController::setMode(AutoSteeringMode mode, float param)
-{
-    _mode=mode;
-    // reset integrals
-    _integral=0.0f;
-    _lastErr=0.0f;
+void AutoSteeringController::setMode(AutoSteeringMode mode, float param) {
+    _mode = mode;
+    _integral = 0.f;
+    _lastError= 0.f;
+    switch(mode) {
+        case AutoSteeringMode::OFF:
+            break;
+        case AutoSteeringMode::TRACK_HEADING:
+            _desiredHeading = param;
+            break;
+        case AutoSteeringMode::TRACK_COURSE:
+            _desiredCourse = param;
+            break;
+        case AutoSteeringMode::TRACK_WIND_ANGLE:
+            _desiredWindAngle = param;
+            break;
+    }
+}
 
+void AutoSteeringController::update(float dt) {
+    computeSteering(dt);
+}
+
+float AutoSteeringController::getRudderAngle() const {
+    return _rudderAngle;
+}
+
+void AutoSteeringController::computeSteering(float dt) {
+    if(_mode == AutoSteeringMode::OFF) {
+        _rudderAngle = 0.f;
+        return;
+    }
+
+    // placeholder for heading logic
+    float error = 0.f;
     switch(_mode) {
-    case AutoSteeringMode::OFF:
-        break;
-
-    case AutoSteeringMode::TRACK_HEADING:
-        _desiredHeading=param;
-        break;
-
-    case AutoSteeringMode::TRACK_COURSE:
-        _desiredCourse=param;
-        break;
-
-    case AutoSteeringMode::TRACK_WIND_ANGLE:
-        _desiredWindAngle=param;
-        break;
-
-    case AutoSteeringMode::RUDDER_LOCK:
-    {
-        // Implement safe limits, e.g. [-25..25]
-        if(param>25.0f) param=25.0f;
-        if(param<-25.0f) param=-25.0f;
-        // We'll store it in _lockAngle
-        _lockAngle=param;
-        Serial.printf("[AutoSteer] Entering RUDDER_LOCK at %.2f deg\n", _lockAngle);
-    }
-    break;
-
-    default:
-        // calibrations...
-        break;
-    }
-}
-
-void AutoSteeringController::updateEnvironmentData(const EnvironmentData& env)
-{
-    _env=env;
-}
-
-void AutoSteeringController::update()
-{
-    computeSteering();
-}
-
-void AutoSteeringController::computeSteering()
-{
-    unsigned long now=millis();
-    float dt=(now-_lastTime)*0.001f;
-    if(dt<1e-3) dt=1e-3;
-    _lastTime=now;
-
-    float error=0.0f;
-    switch(_mode) {
-    case AutoSteeringMode::OFF:
-        _desiredRudderAngle=0.0f;
-        return;
-
-    case AutoSteeringMode::TRACK_HEADING:
-        error=_desiredHeading-_env.heading;
-        break;
-
-    case AutoSteeringMode::TRACK_COURSE:
-        error=_desiredCourse-_env.course;
-        break;
-
-    case AutoSteeringMode::TRACK_WIND_ANGLE:
-        error=_desiredWindAngle-_env.windDirection;
-        break;
-
-    case AutoSteeringMode::RUDDER_LOCK:
-        // Keep the rudder locked at _lockAngle
-        _desiredRudderAngle=_lockAngle;
-        return;
-
-    default:
-        return;
+        case AutoSteeringMode::TRACK_HEADING:
+            // Suppose we have an external function that gives us the actual heading?
+            // We might pass it in. For demonstration, assume "actualHeading=somewhere"
+            // We'll just do a placeholder:
+            error = _desiredHeading - 0.f; // TOTALLY FAKE
+            break;
+        case AutoSteeringMode::TRACK_COURSE:
+            error = _desiredCourse - 0.f; 
+            break;
+        case AutoSteeringMode::TRACK_WIND_ANGLE:
+            error = _desiredWindAngle - 0.f; 
+            break;
+        default:
+            _rudderAngle=0.f;
+            return;
     }
 
-    // If we get here, we are in a heading-based mode => simple PID
-    _integral+=error*dt;
-    float derivative=(error-_lastErr)/dt;
-    float output= _kP*error + _kI*_integral + _kD*derivative;
-    _lastErr=error;
+    _integral += error*dt;
+    float derivative = (error - _lastError)/dt;
+    float output = _kP*error + _kI*_integral + _kD*derivative;
+    _lastError=error;
 
-    // clamp
-    if(output>25.0f) output=25.0f;
-    if(output<-25.0f) output=-25.0f;
-
-    _desiredRudderAngle=output;
-}
-
-float AutoSteeringController::getDesiredRudderAngle() const
-{
-    return _desiredRudderAngle;
+    // clamp e.g. [-30..30] deg
+    if(output>30.f) output=30.f;
+    if(output<-30.f)output=-30.f;
+    _rudderAngle = output;
 }

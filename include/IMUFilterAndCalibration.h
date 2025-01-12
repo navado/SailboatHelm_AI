@@ -1,29 +1,10 @@
 #pragma once
-
-#include <Arduino.h>
-#include <LittleFS.h>
-#include <ArduinoJson.h>
-
-// Example IMU library (MPU9250). Adjust if using a different sensor:
-#include <MPU9250.h>
+#include "IIMUProvider.h"
+#include "ITimeProvider.h"
 
 /**
- * Data structure for storing IMU calibration offsets, etc.
- */
-struct IMUCalibrationData {
-    float accelOffsetX;
-    float accelOffsetY;
-    float accelOffsetZ;
-    float gyroOffsetX;
-    float gyroOffsetY;
-    float gyroOffsetZ;
-    float magOffsetX;
-    float magOffsetY;
-    float magOffsetZ;
-};
-
-/**
- * Filtered IMU data structure to hold final pitch/roll/yaw.
+ * Example structure for storing pitch/roll/yaw
+ * from a naive or advanced filter.
  */
 struct FilteredIMUData {
     float pitch;
@@ -31,47 +12,27 @@ struct FilteredIMUData {
     float yaw;
 };
 
-/**
- * Class that handles IMU reading, filtering, and calibration data.
- * Uses LittleFS to save/read a JSON file with offsets.
- */
 class IMUFilterAndCalibration {
 public:
-    IMUFilterAndCalibration();
+    IMUFilterAndCalibration(IIMUProvider& imu, ITimeProvider& timeProv);
 
-    // Initialize IMU, load calibration from file, etc.
-    bool begin(int sdaPin, int sclPin, int intPin);
-
-    // Attempt to load calibration offsets from /imu_cal.json
-    bool loadCalibration();
-
-    // Save offsets to /imu_cal.json
-    bool saveCalibration();
-
-    // Start a calibration procedure
+    // Start or do calibration
     void startCalibration();
-
-    // Perform a step of calibration
     void doCalibrationStep();
 
-    // Called periodically (or when data-ready) to read + filter IMU
+    // Called periodically
     void update();
 
-    // Get the final, filtered orientation
+    // Get the fused orientation
     FilteredIMUData getFilteredData() const;
 
 private:
-    bool initLittleFS();
-
-private:
-    MPU9250 _mpu;
-    int     _intPin;
-
-    IMUCalibrationData _calData;
-
-    float _pitch;
-    float _roll;
-    float _yaw;
-
-    bool  _inCalibration;
+    IIMUProvider&      _imu;
+    ITimeProvider&     _time;
+    bool               _calibrating;
+    float              _pitch, _roll, _yaw;
+    std::uint64_t      _lastUpdate;
+    // Example offsets
+    float _axOff, _ayOff, _azOff;
+    // etc.
 };

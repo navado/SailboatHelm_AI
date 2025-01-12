@@ -1,28 +1,24 @@
 #pragma once
-#include <Arduino.h>
 #include <string>
 
-// For demonstration, we define two states for the overall autopilot "mode"
+/** Simple enum to represent autopilot states. */
 enum class UIAutoMode {
     STANDBY,
     AUTO
 };
 
+/** 
+ * Data structure representing all the UI state 
+ * the view needs to display.
+ */
 struct UIState {
-    UIAutoMode autoMode;         // Is autopilot in STANDBY or AUTO
-    String currentSteeringMode;  // e.g. "OFF", "TRACK_HEADING", etc.
-    float headingSetpoint;       // The numeric setpoint we display
-    float stepSizeSmall;         // Fine step
-    float stepSizeLarge;         // Coarse step
+    UIAutoMode autoMode;          // e.g. STANDBY or AUTO
+    std::string currentSteeringMode;  // e.g. "OFF", "TRACK_HEADING", etc.
+    float headingSetpoint;        // numeric setpoint
+    float stepSizeSmall;          // small increment
+    float stepSizeLarge;          // large increment
 };
 
-/**
- * UIModel: The "Model" in MVC that holds the UI state:
- * - auto/standby
- * - steering mode name
- * - heading setpoint
- * - step sizes for increments
- */
 class UIModel {
 public:
     UIModel();
@@ -31,7 +27,7 @@ public:
     const UIState& getState() const;
 
     void setAutoMode(UIAutoMode mode);
-    void setSteeringMode(const String& modeName);
+    void setSteeringMode(const std::string& modeName);
     void setHeadingSetpoint(float val);
 
     void incrementSetpointSmall();

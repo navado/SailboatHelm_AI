@@ -1,22 +1,24 @@
 #pragma once
-#include <Arduino.h>
+#include <string>
 #include "UIModel.h"
+#include "IInputDevice.h"
 
-// Suppose we have an AutoSteeringController class in your code:
+// We assume we have an autopilot "AutoSteeringController" that is also
+// mostly platform-agnostic
 #include "AutoSteeringController.h"
 
 /**
- * The "Controller" in MVC: handles user input (buttons),
- * modifies the UIModel, and updates the autopilot as needed.
+ * The UIController uses the IInputDevice to check button states,
+ * then modifies the UIModel and calls the autopilot logic.
  */
 class UIController {
 public:
-    UIController(UIModel& model, AutoSteeringController& autoSteer);
+    UIController(UIModel& model,
+                 AutoSteeringController& autoSteer,
+                 const IInputDevice& input);
+    ~UIController() = default;
 
-    // Initialize pins if needed
-    void begin();
-
-    // Called periodically to check buttons and update model
+    // Called periodically
     void update();
 
 private:
@@ -26,16 +28,8 @@ private:
 
     UIModel& _model;
     AutoSteeringController& _autoSteer;
+    const IInputDevice& _input;
 
-    // Example pins
-    static const int PIN_BTN_AUTO  = 2; 
-    static const int PIN_BTN_MODE  = 3; 
-    static const int PIN_BTN_INC_S = 4; // small increment
-    static const int PIN_BTN_DEC_S = 5; // small decrement
-    static const int PIN_BTN_INC_L = 6; // large increment
-    static const int PIN_BTN_DEC_L = 7; // large decrement
-
-    // We'll track button states to detect edges
     bool _lastAuto;
     bool _lastMode;
 };

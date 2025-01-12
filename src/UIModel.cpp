@@ -1,12 +1,12 @@
 #include "UIModel.h"
 
 UIModel::UIModel() {
-    // Initialize default state
-    _state.autoMode          = UIAutoMode::STANDBY;
-    _state.currentSteeringMode = "OFF";
-    _state.headingSetpoint   = 90.0f;  // e.g. default to heading=90
-    _state.stepSizeSmall     = 1.0f;
-    _state.stepSizeLarge     = 10.0f;
+    // Defaults
+    _state.autoMode           = UIAutoMode::STANDBY;
+    _state.currentSteeringMode= "OFF";
+    _state.headingSetpoint    = 90.0f;
+    _state.stepSizeSmall      = 1.0f;
+    _state.stepSizeLarge      = 10.0f;
 }
 
 const UIState& UIModel::getState() const {
@@ -17,7 +17,7 @@ void UIModel::setAutoMode(UIAutoMode mode) {
     _state.autoMode = mode;
 }
 
-void UIModel::setSteeringMode(const String& modeName) {
+void UIModel::setSteeringMode(const std::string& modeName) {
     _state.currentSteeringMode = modeName;
 }
 

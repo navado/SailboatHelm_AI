@@ -1,57 +1,38 @@
 #pragma once
+#include <string>
 
-#include <Arduino.h>
-
+/** Simple autopilot modes. */
 enum class AutoSteeringMode {
     OFF,
     TRACK_HEADING,
     TRACK_COURSE,
-    TRACK_WIND_ANGLE,
-    CALIBRATION_PID,
-    CALIBRATION_THRESHOLD,
-    CALIBRATION_IMU,
-    RUDDER_LOCK  // New mode
+    TRACK_WIND_ANGLE
 };
 
-struct EnvironmentData {
-    float heading;       // from IMU
-    float course;        // from GPS
-    float windDirection; // from wind sensor
-};
-
-/**
- * Main autopilot logic that produces a *desired rudder angle*.
- */
 class AutoSteeringController {
 public:
     AutoSteeringController();
+    ~AutoSteeringController() = default;
 
-    // setMode(RUDDER_LOCK, someAngle) => lock the rudder
+    // Set autopilot mode + param (like desired heading)
     void setMode(AutoSteeringMode mode, float param=0.0f);
 
-    void updateEnvironmentData(const EnvironmentData& env);
-    void update();  // do the control logic
+    // The main update function
+    void update(float dt);
 
-    float getDesiredRudderAngle() const;
-
-private:
-    void computeSteering();
+    // Return the desired rudder angle
+    float getRudderAngle() const;
 
 private:
+    void computeSteering(float dt);
+
     AutoSteeringMode _mode;
-    EnvironmentData  _env;
-
     float _desiredHeading;
     float _desiredCourse;
     float _desiredWindAngle;
+    float _rudderAngle;
 
-    // The lock angle if RUDDER_LOCK
-    float _lockAngle;
-
-    float _desiredRudderAngle;
-
-    // Simple PID for heading-based modes
+    // A small PID or P-control
     float _kP, _kI, _kD;
-    float _integral, _lastErr;
-    unsigned long _lastTime;
+    float _integral, _lastError;
 };

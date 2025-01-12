@@ -1,29 +1,28 @@
 #pragma once
-#include <Arduino.h>
+#include <string>
 #include "UIModel.h"
 
-// Forward-declare a pointer or reference to your u8g2 object if you want
-// or you can create it in the .cpp
-class U8G2;
-
 /**
- * UIView: The "View" in MVC for a 128x256 display using u8g2.
- * Responsible for drawing the UI.
+ * A platform-agnostic "View" interface for a 128x256 display. 
+ * We assume an underlying driver library (e.g. u8g2),
+ * but we do NOT #include Arduino.h or other Arduino specifics here.
  */
 class UIView {
 public:
     UIView();
     ~UIView();
 
-    // Initialize the display (u8g2, etc.)
+    // Initialize the display driver
     bool begin();
 
-    // Render the UI from the model
+    // Render the UI state
     void render(const UIModel& model);
 
 private:
-    // Some helper to convert UIAutoMode to a string
-    String autoModeToStr(UIAutoMode mode) const;
-    // Our u8g2 display handle
-    U8G2* _u8g2;
+    std::string autoModeToStr(UIAutoMode mode) const;
+
+    // Opaque pointer or reference to your chosen display driver
+    // We won't reference Arduino calls here. We'll assume the .cpp
+    // handles the library. 
+    void* _u8g2; // We can cast to the real type in the .cpp
 };

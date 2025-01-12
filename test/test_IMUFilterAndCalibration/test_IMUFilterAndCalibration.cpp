@@ -1,63 +1,71 @@
-// test/test_IMUFilterAndCalibration/test_IMUFilterAndCalibration.cpp
-
-#include <Arduino.h>
 #include <unity.h>
-
-// Include the class under test
 #include "IMUFilterAndCalibration.h"
 
-// If you have a custom or minimal MPU9250 library, include that instead.
-// If you need to mock I2C or 'Wire', do it here or in a separate mock file.
+// Mock classes
+class MockIMUProvider : public IIMUProvider {
+public:
+    bool newData = false;
+    IMUData data;
 
-static IMUFilterAndCalibration imuFilter;
+    bool getIMUData(IMUData& outData) override {
+        if(!newData) return false;
+        outData = data;
+        newData = false;
+        return true;
+    }
+};
 
-void setUp(void) {
-    // Runs before each test
+class MockTimeProvider : public ITimeProvider {
+public:
+    std::uint64_t currentMs = 0;
+    std::uint64_t getMillis() const override {
+        return currentMs;
+    }
+};
+
+static MockIMUProvider mockImu;
+static MockTimeProvider mockTime;
+static IMUFilterAndCalibration filterCal(mockImu, mockTime);
+
+void setUp() {}
+void tearDown() {}
+
+void test_no_new_data_no_update() {
+    mockImu.newData=false;
+    mockTime.currentMs=1000;
+    filterCal.update();
+    FilteredIMUData fd = filterCal.getFilteredData();
+    // no changes
+    TEST_ASSERT_EQUAL_FLOAT(0.f, fd.roll);
 }
 
-void tearDown(void) {
-    // Runs after each test
+void test_integration_simple() {
+    // Provide some gyro data
+    mockImu.newData=true;
+    mockImu.data = {0.f, 0.f, 0.f, 0.1f, 0.f, 0.f, 0.f,0.f,0.f};
+    mockTime.currentMs=2000;
+    filterCal.update();
+    // do it again with small dt
+    mockImu.newData=true;
+    mockTime.currentMs=2100;
+    filterCal.update();
+    FilteredIMUData fd = filterCal.getFilteredData();
+    TEST_ASSERT_NOT_EQUAL(0.f, fd.roll);
 }
 
-void test_imu_begin_ok() {
-    // If 'begin()' is expected to succeed under test conditions
-    bool result = imuFilter.begin(21, 22, 27);
-    TEST_ASSERT_TRUE_MESSAGE(result, "IMUFilterAndCalibration::begin() should return true if init is successful");
-}
-
-void test_imu_update_no_crash() {
-    imuFilter.update();
-    // We can check default orientation after an update
-    auto data = imuFilter.getFilteredData();
-    // Depending on your filter logic, might be near 0
-    TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, data.roll);
-    TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, data.pitch);
-    TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, data.yaw);
-}
-
-void test_imu_calibration_flow() {
-    imuFilter.startCalibration();
-    imuFilter.doCalibrationStep();
-    // In real tests, you'd mock out the file writes, ensuring it calls saveCalibration().
-    TEST_PASS_MESSAGE("Calibration step test passed (no crash).");
-}
-
-// Register tests with Unity
-// We do NOT define setup() / loop() here. 
-// PlatformIO's test runner calls these test functions automatically.
 #ifdef ARDUINO
-// If you prefer to control the order manually, you can wrap them:
-#if 0
 void setup() {
     UNITY_BEGIN();
-    RUN_TEST(test_imu_begin_ok);
-    RUN_TEST(test_imu_update_no_crash);
-    RUN_TEST(test_imu_calibration_flow);
+    RUN_TEST(test_no_new_data_no_update);
+    RUN_TEST(test_integration_simple);
     UNITY_END();
 }
-
-void loop() {
-    // Not used
+void loop() {}
+#else
+int main(){
+    UNITY_BEGIN();
+    RUN_TEST(test_no_new_data_no_update);
+    RUN_TEST(test_integration_simple);
+    return UNITY_END();
 }
-#endif
 #endif

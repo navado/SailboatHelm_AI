@@ -1,60 +1,42 @@
-// test/test_AutoSteeringController/test_AutoSteeringController.cpp
-
-#include <Arduino.h>
 #include <unity.h>
 #include "AutoSteeringController.h"
 
-// If we want to control time, we can define a global variable or do not define it at all:
-static unsigned long fakeTime = 0;
-
-// We do NOT redefine 'millis()' if we want the real function to run. 
-// Or we can do:
-#if 0
-extern "C" unsigned long millis() {
-    return fakeTime;
-}
-void incrementFakeTime(unsigned long ms) {
-    fakeTime += ms;
-}
-#endif
-
+// We'll have a static instance to test
 static AutoSteeringController autoSteer;
 
-void setUp() {
+void setUp() { 
+    // runs before each test
+}
+void tearDown() { 
+    // runs after each test
+}
+
+void test_off_mode_rudder_zero() {
     autoSteer.setMode(AutoSteeringMode::OFF);
+    autoSteer.update(0.1f);
+    TEST_ASSERT_EQUAL_FLOAT(0.f, autoSteer.getRudderAngle());
 }
 
-void tearDown() {
-    // ...
-}
-
-void test_off_mode_zero_rudder() {
-    autoSteer.update();
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, autoSteer.getDesiredRudderAngle());
-}
-
-void test_rudder_lock_clamps_angle() {
-    autoSteer.setMode(AutoSteeringMode::RUDDER_LOCK, 30.0f);
-    autoSteer.update();
-    // Should clamp to 25 deg
-    TEST_ASSERT_EQUAL_FLOAT(25.0f, autoSteer.getDesiredRudderAngle());
-}
-
-void test_rudder_lock_valid_angle() {
-    autoSteer.setMode(AutoSteeringMode::RUDDER_LOCK, 10.0f);
-    autoSteer.update();
-    TEST_ASSERT_EQUAL_FLOAT(10.0f, autoSteer.getDesiredRudderAngle());
+void test_track_heading_produces_output() {
+    autoSteer.setMode(AutoSteeringMode::TRACK_HEADING, 90.f);
+    autoSteer.update(0.1f);
+    float rudder = autoSteer.getRudderAngle();
+    TEST_ASSERT_NOT_EQUAL(0.f, rudder);
 }
 
 #ifdef ARDUINO
-#if 1
 void setup() {
     UNITY_BEGIN();
-    RUN_TEST(test_off_mode_zero_rudder);
-    RUN_TEST(test_rudder_lock_clamps_angle);
-    RUN_TEST(test_rudder_lock_valid_angle);
+    RUN_TEST(test_off_mode_rudder_zero);
+    RUN_TEST(test_track_heading_produces_output);
     UNITY_END();
 }
-void loop(){}
-#endif
+void loop() {}
+#else
+int main() {
+    UNITY_BEGIN();
+    RUN_TEST(test_off_mode_rudder_zero);
+    RUN_TEST(test_track_heading_produces_output);
+    return UNITY_END();
+}
 #endif

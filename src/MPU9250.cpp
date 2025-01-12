@@ -1,4 +1,9 @@
+#include <Arduino.h>
+#include <Wire.h>
 #include "MPU9250.h"
+
+// (the rest of your hardware-specific I2C logic)
+
 
 // MPU9250 registers (common subset)
 static const uint8_t WHO_AM_I       = 0x75;
