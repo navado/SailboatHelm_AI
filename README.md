@@ -1,3 +1,5 @@
+![Boat Autopilot Programming](docs/img/AIAutoPilot.png)
+
 # What is this?
 
 This code in this version created in attempt to evaluate ability of ChatGPT to create useful code on interesting topic. I selected boat autopipot on embedded system as an example to learn capabilities and illustrate them.
