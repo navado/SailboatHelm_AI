@@ -28,4 +28,6 @@ You can create PRs, test, improve, discuss. I will appreciate all the feedback
  - [ ] RX data from NMEA0183 over wifi
  - [ ] TX commands using NMEA0183 over wifi (define $P protocol)
  - [ ] Add command only mode without the stering mechanics and vise versa, use external course computer
+ - [ ] Rewrite everything in Rust
+ - [ ] Virtualization of all major components
  - [ ] TBD
