@@ -137,3 +137,37 @@ UIView --> UIModel : "render(...) reads"
 IMUFilterAndCalibration --> IIMUProvider : "owns reference"
 IMUFilterAndCalibration --> ITimeProvider : "owns reference"
 ```
+
+## Flowchart 
+
+```mermaid
+flowchart TB
+    A((Boot)) --> B[setup()]
+    B --> C[myIMUProvider.begin()]
+    C --> C2[attachInterrupt(dataReadyPin, onImuDataReady)]
+    B --> D[uiView.begin()]
+    B --> E[autoSteer.setMode(OFF)]
+    B --> F[loop() start]
+
+    %% The loop has multiple repeated steps
+    F --> ISR[ISR: onImuDataReady()]
+    ISR --> RING[myIMUProvider::readSensorInISR()  
+push(IMUData) -> ring]
+    
+    F --> F1[imuFilter.update()]
+    F1 --> F2[imuFilter.getIMUData(myIMUProvider)]
+    F2 --> F3[Filter & calibration -> pitch/roll/yaw updated]
+
+    F --> F4[autoSteer.update(dt)]
+    F4 --> F5[Compute desired rudder angle]
+
+    F --> F6[uiController.update()]
+    F6 --> F7[uiController -> reads IInputDevice  
+-> modifies UIModel  
+-> possibly calls autoSteer.setMode(...)]
+
+    F --> F8[uiView.render(uiModel)]
+
+    F --> F[(loop repeats)]
+
+```
