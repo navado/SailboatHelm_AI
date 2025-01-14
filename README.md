@@ -89,10 +89,10 @@ class MyIMUProvider {
   +readSensorInISR()
   +onImuDataReady()
 }
-MyIMUProvider --|> IIMUProvider : implements
+MyIMUProvider --|> IIMUProvider : implements 
 
 %% ================== Ring Buffer ==================
-class "RingBuffer<T,N>" {
+class RingBuffer {
   -_buffer : T[N]
   -_head, _tail : size_t
   -_count : size_t
@@ -103,7 +103,7 @@ class "RingBuffer<T,N>" {
   +size() size_t
 }
 
-MyIMUProvider o-- "RingBuffer<IMUData,N>" : has
+MyIMUProvider o-- RingBuffer : has
 
 %% ================== UI Model/Controller/View ==================
 class UIModel {
@@ -142,32 +142,28 @@ IMUFilterAndCalibration --> ITimeProvider : "owns reference"
 
 ```mermaid
 flowchart TB
-    A((Boot)) --> B[setup()]
-    B --> C[myIMUProvider.begin()]
-    C --> C2[attachInterrupt(dataReadyPin, onImuDataReady)]
-    B --> D[uiView.begin()]
-    B --> E[autoSteer.setMode(OFF)]
-    B --> F[loop() start]
+    A((Boot)) --> B["setup()"]
+    B --> C["myIMUProvider.begin()"]
+    C --> C2["attachInterrupt(dataReadyPin, onImuDataReady)"]
+    B --> D["uiView.begin()"]
+    B --> E["autoSteer.setMode(OFF)"]
+    B --> F["loop() start"]
 
-    %% The loop has multiple repeated steps
-    F --> ISR[ISR: onImuDataReady()]
-    ISR --> RING[myIMUProvider::readSensorInISR()  
-push(IMUData) -> ring]
+    F --> ISR["ISR: onImuDataReady()"]
+    ISR --> RING["myIMUProvider::readSensorInISR()<br/>push(IMUData) -> ring"]
     
-    F --> F1[imuFilter.update()]
-    F1 --> F2[imuFilter.getIMUData(myIMUProvider)]
-    F2 --> F3[Filter & calibration -> pitch/roll/yaw updated]
+    F --> F1["imuFilter.update()"]
+    F1 --> F2["imuFilter.getIMUData(myIMUProvider)"]
+    F2 --> F3["Filter & calibration -> pitch/roll/yaw updated"]
 
-    F --> F4[autoSteer.update(dt)]
-    F4 --> F5[Compute desired rudder angle]
+    F --> F4["autoSteer.update(dt)"]
+    F4 --> F5["Compute desired rudder angle"]
 
-    F --> F6[uiController.update()]
-    F6 --> F7[uiController -> reads IInputDevice  
--> modifies UIModel  
--> possibly calls autoSteer.setMode(...)]
+    F --> F6["uiController.update()"]
+    F6 --> F7["uiController -> reads IInputDevice<br/>-> modifies UIModel<br/>-> possibly calls autoSteer.setMode(...)"]
 
-    F --> F8[uiView.render(uiModel)]
+    F --> F8["uiView.render(uiModel)"]
 
-    F --> F[(loop repeats)]
+    F --> F["loop() start"]
 
 ```
